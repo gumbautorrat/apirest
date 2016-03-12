@@ -19,16 +19,18 @@ $app->post("/control/", function() use($app)
 	try{
 
 		$connection = getConnectionAgencia();
-		$query = "SELECT COUNT(*) FROM authagencia WHERE pass = ? and id_agencia = (select id_agencia FROM agencias WHERE nombre = ?)";
+		//$query = "SELECT COUNT(*) FROM authagencia WHERE pass = ? and id_agencia = (select id_agencia FROM agencias WHERE nombre = ?)";
+		$query = "CALL autenticarAgencia(?,?)";
 		$dbh = $connection->prepare($query);
-		$dbh->bindParam(1, $pass);
-		$dbh->bindParam(2, $user);
+		$dbh->bindParam(1, $user);
+		$dbh->bindParam(2, $pass);
 		$dbh->execute();
+		$res = $dbh->fetch();
 
 		$app->response->headers->set("Content-type", "application/json");
 		$app->response->status(200);
 
-		if($dbh->fetchColumn() == 0){
+		if($res['result'] == 0){
 			$connection = null;
 			$app->response->body(json_encode(array("status" => "Ok", "message" => "Autentication Failure")));
 		}else{
@@ -76,7 +78,7 @@ $app->get("/inmuebles/", function() use($app)
 /*************************************************************************************
 
 	Funcion que se recibe peticiones POST a la url http://localhost/apirest/inmuebles
-	y retorna todos los inmuebles tanto propios com compartidos en formato JSON
+	y retorna todos los inmuebles tanto propios como compartidos en formato JSON
 
 
 **************************************************************************************/
@@ -136,10 +138,12 @@ $app->get("/propietarios_agencia/:agencia", function($agencia) use($app)
 
 		$connection = getConnectionAgencia();
 
-		$query = "SELECT distinct(p.dni), p.id_propietario,p.nombre, p.primer_apellido, p.segundo_apellido, p.direccion, p.localidad, p.provincia, p.telefono, p.email
+		/*$query = "SELECT distinct(p.dni), p.id_propietario,p.nombre, p.primer_apellido, p.segundo_apellido, p.direccion, p.localidad, p.provincia, p.telefono, p.email
 			      FROM inmuebles i INNER JOIN propietarios p ON i.id_propietario = p.id_propietario 
 		          WHERE i.id_agencia = (SELECT id_agencia FROM agencias WHERE nombre = ?) 
-			      ORDER BY p.nombre,p.primer_apellido,p.segundo_apellido";
+			      ORDER BY p.nombre,p.primer_apellido,p.segundo_apellido";*/
+
+		$query = "CALL obtenerPropietariosAgencia(?);";
 		
 		$dbh = $connection->prepare($query);
 		$dbh->bindParam(1, $agencia);
