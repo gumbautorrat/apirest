@@ -143,7 +143,7 @@ $app->get("/propietarios_agencia/:agencia", function($agencia) use($app)
 		          WHERE i.id_agencia = (SELECT id_agencia FROM agencias WHERE nombre = ?) 
 			      ORDER BY p.nombre,p.primer_apellido,p.segundo_apellido";*/
 
-		$query = "CALL obtenerPropietariosAgencia(?);";
+		$query = "CALL obtenerPropietariosAgencia(?)";
 		
 		$dbh = $connection->prepare($query);
 		$dbh->bindParam(1, $agencia);
